@@ -3,5 +3,7 @@ const router = require('express').Router();
 
 // add our routes
 
+// TODO: html route for displaying the home page
+
 
 module.exports = router;
