@@ -46,16 +46,16 @@
               data-parent="#activity-form-accordion"
             >
               <div class="card-body">
-                <form>
+                <form id="activity-form">
                   <div class="form-group">
                     <label for="mileage">Mileage</label>
                     <input
                       type="number"
                       class="form-control"
                       id="mileage"
-                      aria-describedby="mileageHelp"
+                      aria-describedby="mileage-help"
                     />
-                    <small id="mileageHelp" class="form-text text-muted"
+                    <small id="mileage-help" class="form-text text-muted"
                       >Enter the length of your ride in miles including up to
                       one decimal point.</small
                     >
@@ -66,9 +66,9 @@
                       type="number"
                       class="form-control"
                       id="duration"
-                      aria-describedby="durationHelp"
+                      aria-describedby="duration-help"
                     />
-                    <small id="durationHelp" class="form-text text-muted"
+                    <small id="duration-help" class="form-text text-muted"
                       >Enter the length of your ride in minutes. Use the closest
                       whole number.</small
                     >
@@ -79,9 +79,9 @@
                       type="date"
                       class="form-control"
                       id="date"
-                      aria-describedby="dateHelp"
+                      aria-describedby="date-help"
                     />
-                    <small id="dateHelp" class="form-text text-muted"
+                    <small id="date-help" class="form-text text-muted"
                       >Choose the date of this ride.</small
                     >
                   </div>
@@ -111,6 +111,7 @@
     </main>
 
     <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
     <script
       src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
       integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
@@ -126,6 +127,155 @@
       integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
       crossorigin="anonymous"
     ></script>
-    <script></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+      // on submit event for the form
+      const loadGraphs = () => {
+        // TODO: load the graphs
+        console.log("Loaded graphs");
+        loadDurationGraph();
+        loadMileageGraph();
+      };
+
+      const loadDurationGraph = () => {
+        axios.get("/api/graphs/duration").then((response) => {
+          const data = response.data;
+          console.log(data);
+          Highcharts.chart("duration-highchart", {
+              chart: {
+                zoomType: "x",
+              },
+              title: {
+                text: "Time in minutes",
+              },
+              subtitle: {
+                text:
+                  document.ontouchstart === undefined
+                    ? "Click and drag in the plot area to zoom in"
+                    : "Pinch the chart to zoom in",
+              },
+              xAxis: {
+                type: "datetime",
+              },
+              yAxis: {
+                title: {
+                  text: "Duration in Minutes",
+                },
+              },
+              legend: {
+                enabled: false,
+              },
+              plotOptions: {
+                area: {
+                  marker: {
+                    radius: 2,
+                  },
+                  lineWidth: 1,
+                  states: {
+                    hover: {
+                      lineWidth: 1,
+                    },
+                  },
+                  threshold: null,
+                },
+              },
+              series: [
+                {
+                  type: "line",
+                  name: "Duration",
+                  data: data,
+                },
+              ],
+            });
+        });
+      };
+
+      const loadMileageGraph = () => {
+        axios.get("/api/graphs/mileage").then((response) => {
+          const data = response.data;
+          console.log(data);
+          Highcharts.chart("mileage-highchart", {
+              chart: {
+                zoomType: "x",
+              },
+              title: {
+                text: "Mileage over time",
+              },
+              subtitle: {
+                text:
+                  document.ontouchstart === undefined
+                    ? "Click and drag in the plot area to zoom in"
+                    : "Pinch the chart to zoom in",
+              },
+              xAxis: {
+                type: "datetime",
+              },
+              yAxis: {
+                title: {
+                  text: "Miles",
+                },
+              },
+              legend: {
+                enabled: false,
+              },
+              plotOptions: {
+                area: {
+                  marker: {
+                    radius: 2,
+                  },
+                  lineWidth: 1,
+                  states: {
+                    hover: {
+                      lineWidth: 1,
+                    },
+                  },
+                  threshold: null,
+                },
+              },
+              series: [
+                {
+                  type: "line",
+                  name: "Mileage",
+                  data: data,
+                },
+              ],
+            });
+        });
+    
+      };
+
+      $(document).ready(() => {
+        loadGraphs();
+      });
+
+      $("#activity-form").on("submit", (event) => {
+        event.preventDefault();
+        const newActivity = {
+          mileage: $("#mileage").val(),
+          duration: $("#duration").val(),
+          date: $("#date").val(),
+        };
+
+        axios
+          .post("/api/activities", newActivity)
+          .then((response) => {
+            alert("Activity tracked successfully!");
+            $("#mileage").val("");
+            $("#duration").val("");
+            $("#date").val("");
+
+            loadGraphs();
+            console.log(response);
+          })
+          .catch((err) => {
+            const message = err.response.data.message;
+            alert(message);
+          });
+      });
+
+      // When response, display message to user that the activity was tracked
+
+      // reload the graphs
+    </script>
   </body>
 </html>
